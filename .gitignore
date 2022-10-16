@@ -1,0 +1,14 @@
+# DS_STORE
+.DS_Store
+
+# Ignore videos
+*.mp4
+*.webm
+
+# Ignore images
+
+*.png
+*.jpg
+
+# Ignore pyc
+*.pyc
