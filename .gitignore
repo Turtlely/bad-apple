@@ -7,7 +7,7 @@
 *.mkv
 
 # Ignore images
-
+*.gif
 *.png
 *.jpg
 

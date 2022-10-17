@@ -15,36 +15,86 @@ def get_length(filename):
         stderr=subprocess.STDOUT)
     return float(result.stdout)
 
+# EXPERIMENTAL RGB FUNCTION
+def colored(r, g, b, text):
+    return "\033[38;2;{};{};{}m{} \033[39m".format(r, g, b, text)
+
 # Get file name format from tmp-frames
 file_length = len(os.listdir('tmp-frames')[0].rsplit( ".", 1 )[ 0 ])
 
 # Function to display an image onto the command line
 def displayFrame(f):
-    ascii = config.asciiBD
+
     try:
         # Open the file
-        a = Image.open(f).convert('L')
+        a = Image.open(f)
 
-        # Load image as numpy array
-        im = np.around(np.asarray(a)/256, decimals=1)
+        # For grayscale mode
+        if config.COLOR == False:
+            # If greyscale, load the greyscale ascii set
+            ascii = config.asciiDB
 
-        # Log the image
-        #print(f)
+            a = a.convert('L')
 
-        # Create new array with characters instead of brightnesses
-        out = [[ascii[int((len(ascii)-1)*pixel)] for pixel in row] for row in im]
+            # Load image as numpy array
+            im = np.around(np.asarray(a)/256, decimals=1)
 
-        # mildly inefficient double for loop here, could be optimized lol
-        for row in out:
-            for val in row:
-                print(val,end=" "),
-            print("\n",end="")
-    
+            # Create new array with characters instead of brightnesses
+            out = [[ascii[int((len(ascii)-1)*pixel)] for pixel in row] for row in im]
+
+            # mildly inefficient double for loop here, could be optimized lol
+
+            # Now this program draws frames as entire frames, no longer pixel by pixel, this makes clearing the screen much much faster
+            line = ""
+
+            for row in out:
+                for val in row:
+                    line += val +" "
+                line += "\n"
+
+            print(line)
+
+
+        # For RGB mode (EXPERIMENTAL)
+        else:
+            # If RGB, load the RGB ascii set
+            ascii = config.RGB
+
+            a = a.convert('RGB')
+            
+            # Load image as numpy array
+            im = np.around(np.asarray(a)/256, decimals=1)
+
+            # mildly inefficient double for loop here, could be optimized lol
+            
+            # Now this program draws frames as entire frames, no longer pixel by pixel, this makes clearing the screen much much faster
+            line = ""
+
+            for row in im:
+                for val in row:
+                    # Get RGB values
+                    b = val[0]
+                    r = val[1]
+                    g= val[2]
+
+                    # Get brightnesss
+                    y = 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+                    # Map brightness to ascii
+                    out = ascii[int((len(ascii)-1)*y)]
+
+                    # Print
+                    line+=colored(int(r*256), int(g*256), int(b*256), out)+" "
+
+                # Append newline
+                line+="\n"
+
+            # Draw frame
+            print(line)
+
     # If error occurs, just skip the frame
     except Exception as e:
         print(e)
-
-# TODO implement escape key to delete files
 
 # Function to select what images to display on the command line
 def play(video_name):
@@ -56,8 +106,6 @@ def play(video_name):
 
     # Number of files
     num = len(files)
-
-    print(num)
 
     # Get start time
     START = time.time()
@@ -75,8 +123,16 @@ def play(video_name):
 
         # ONLY display if a frame has changed
         if old_frame < current_frame:
+            # Clear screen
+            print(chr(27) + "[2J")
+            print(chr(27) + "[1;1f")
+
+            # Display frame
             displayFrame(f)
-        
+
+            # Give time for frame to appear, 0.03 can be changed
+            time.sleep(0.025)
+
         # Calculate new frame number
         elapsed = time.time()-START
 
