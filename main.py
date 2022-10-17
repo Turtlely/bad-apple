@@ -12,32 +12,41 @@ def main():
     # Download video
     parser.add_argument("-d", "--Download", help = "Download a video from youtube")
 
-    # Split video into frames
-    parser.add_argument("-s", "--Split", help = "Split a video into its frames inside of a folder")
-    parser.add_argument("-l", "--List", help = "List available videos to play in terminal")
+    # Play a video
     parser.add_argument("-p", "--Play", help = "Play a video")
+
+    # Set up configuration file
     parser.add_argument("-c", "--config", help="Set configuration")
+
+
     args = parser.parse_args()
 
+    # Download the video using the ytdownloader script
     if args.Download:
+
+        # Make directory for downloaded videos
+        if not os.path.isdir('VIDEOS'):
+            os.makedirs('VIDEOS')
+
+        # Download video
         ytdownloader.download(args.Download)
 
-    if args.Split: # argument should be the name of the video file
-        newpath = f'./frames-{args.Split[:-4]}' 
-        if not os.path.exists(newpath):
-            os.makedirs(newpath)
-        subprocess.call(['ffmpeg', '-i', args.Split, f'frames-{args.Split[:-4]}/'+'img%04d.png'])
+    # Play a video in the command line
+    if args.Play: # argument should be the video name, NO EXTENSION
+        video_name = args.Play
+        
+        # First resize the video to config size
+        os.system(f'ffmpeg -i {video_name}.mkv -filter:v scale={config.WIDTH}:-1 -c:a copy {video_name}-{config.WIDTH}.mkv')
 
-    if args.Play: # argument should be the folder of the video frames
+        # create temporary directory to for video frames
+        if not os.path.isdir('tmp-frames'):
+            os.makedirs('tmp-frames')
 
+            # Split video into frames inside this directory
+            os.system(f'ffmpeg -i {video_name}-{config.WIDTH}.mkv tmp-frames/%04d.png')
 
-    print(args.Download)
-    # Convert each frame into an ascii frame
-    print("working")
-    # options:
-    # download video
-    # play video
-    # set config
+        # Play video
+        converter.play()
 
 if __name__ == "__main__":
     main()

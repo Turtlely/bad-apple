@@ -4,6 +4,7 @@
 # Ignore videos
 *.mp4
 *.webm
+*.mkv
 
 # Ignore images
 
