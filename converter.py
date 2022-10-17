@@ -2,19 +2,25 @@
 from PIL import Image
 import numpy as np
 import os
+import subprocess
 import time
 import config
 
-# Some basic config things
-FPS = 30 # write code to find this automatically
-ascii = config.ascii2
-DURATION_SECONDS = 219 # write code to find this automatically
+# Video Duration function
+def get_length(filename):
+    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
+                             "format=duration", "-of",
+                             "default=noprint_wrappers=1:nokey=1", filename],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    return float(result.stdout)
 
-# assign directory to get frames from
-directory = 'tmp-frames'
+# Get file name format from tmp-frames
+file_length = len(os.listdir('tmp-frames')[0].rsplit( ".", 1 )[ 0 ])
 
 # Function to display an image onto the command line
 def displayFrame(f):
+    ascii = config.asciiBD
     try:
         # Open the file
         a = Image.open(f).convert('L')
@@ -26,7 +32,7 @@ def displayFrame(f):
         #print(f)
 
         # Create new array with characters instead of brightnesses
-        out = [[ascii[int(10*pixel)] for pixel in row] for row in im]
+        out = [[ascii[int((len(ascii)-1)*pixel)] for pixel in row] for row in im]
 
         # mildly inefficient double for loop here, could be optimized lol
         for row in out:
@@ -38,18 +44,15 @@ def displayFrame(f):
     except Exception as e:
         print(e)
 
-# Function to select what images to display on the command line
-def play():
-    # PROCEEDURE: 
+# TODO implement escape key to delete files
 
-    # Start timer
-    # Calculate frame number
-    # Fetch frame
-    # Display frame
-    # Repeat
+# Function to select what images to display on the command line
+def play(video_name):
+    # Duration of the video
+    DURATION_SECONDS = int(get_length(video_name))
 
     # create sorted list of files to choose from
-    files = sorted(os.listdir(directory))
+    files = sorted(os.listdir('tmp-frames'))
 
     # Number of files
     num = len(files)
@@ -68,9 +71,8 @@ def play():
     # Enter loop until the last frame has been played
     while current_frame <= num:
         # Get frame
-        f = os.path.join(directory, f"{current_frame:04}.png") #May not always be 4 digits, write code to account for this
+        f = os.path.join('tmp-frames', f"{str(current_frame).zfill(file_length)}.png")
 
-        # Display the frame
         # ONLY display if a frame has changed
         if old_frame < current_frame:
             displayFrame(f)
